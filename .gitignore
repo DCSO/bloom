@@ -1,0 +1,3 @@
+*.bloom.gz
+*.bloom
+build/*
