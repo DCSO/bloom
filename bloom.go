@@ -1,3 +1,6 @@
+// DCSO Threat Intelligence Engine
+// Copyright (c) 2017, DCSO GmbH
+
 //Implements a simple and highly efficient variant of the Bloom filter that uses only two hash functions.
 
 package bloom
@@ -78,7 +81,7 @@ func (s *BloomFilter) Read(input io.Reader) error {
 			return err
 		}
 		if n != 8 {
-			return errors.New(fmt.Sprintf("Cannot read from file: %d, position: %d, %d", n, i*8, len(bs8)))
+			return fmt.Errorf("Cannot read from file: %d, position: %d, %d", n, i*8, len(bs8))
 		}
 		s.v[i] = binary.LittleEndian.Uint64(bs8)
 	}
@@ -149,7 +152,7 @@ func (s *BloomFilter) Add(value []byte) {
 		k = uint32(fingerprint[i] / 64)
 		l = uint32(fingerprint[i] % 64)
 		v := uint64(1 << l)
-		if s.v[k] & v == 0 {
+		if s.v[k]&v == 0 {
 			newValue = true
 		}
 		s.v[k] |= v

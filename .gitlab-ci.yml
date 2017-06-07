@@ -1,0 +1,85 @@
+image: golang:1.7
+stages:
+  - build
+  - verify
+  - style
+
+before_script:
+  - export GOPATH=$(pwd)
+  - export PROJPATH=$GOPATH/src/github.com/dcso/bloom
+  - export PATH=$PATH:$GOPATH/bin
+  - useradd --no-create-home -g users -d /tmp gouser
+
+go_build:
+  stage: build
+  artifacts:
+    paths:
+      - src/
+      - bin/
+      - pkg/
+  script:
+    - mkdir -p $PROJPATH
+    - ls | egrep -v '^src$' | xargs mv -t $PROJPATH
+    - cd $PROJPATH
+    - go get -t -v -d  $(go list ./...)
+    - go build -race -v  $(go list ./...)
+
+go_test:
+    stage: verify
+    artifacts:
+      paths:
+        - src/
+        - bin/
+        - pkg/
+    script:
+        - cd $PROJPATH
+        - su gouser -p -c "/usr/local/go/bin/go test -race -cover ./..."
+
+go_vet:
+    stage: verify
+    artifacts:
+      paths:
+        - src/
+        - bin/
+        - pkg/
+    script:
+        - cd $PROJPATH
+        - go vet $(go list ./... | grep -v "vendor")
+
+staticcheck:
+    stage: verify
+    artifacts:
+      paths:
+        - src/
+        - bin/
+        - pkg/
+    script:
+        - cd $PROJPATH
+        - go get -u honnef.co/go/tools/cmd/staticcheck
+        - staticcheck $(go list ./... | grep -v "vendor")
+
+golint:
+    stage: style
+    artifacts:
+      paths:
+        - src/
+        - bin/
+        - pkg/
+    script:
+        - cd $PROJPATH
+        - go get -u github.com/golang/lint/golint
+        - out=$(golint $(go list ./... | grep -v "vendor"))
+        - if [ "$out" ]; then echo "$out"; exit 1; fi
+    allow_failure: true
+
+gosimple:
+    stage: style
+    artifacts:
+      paths:
+        - src/
+        - bin/
+        - pkg/
+    script:
+        - cd $PROJPATH
+        - go get -u honnef.co/go/tools/cmd/gosimple
+        - gosimple $(go list ./... | grep -v "vendor")

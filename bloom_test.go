@@ -1,3 +1,6 @@
+// DCSO Threat Intelligence Engine
+// Copyright (c) 2017, DCSO GmbH
+
 package bloom
 
 import "os"
@@ -96,6 +99,10 @@ func TestSerialization(t *testing.T) {
 	filter.Add(GenerateTestValue(100))
 	newFilter.Add(GenerateTestValue(100))
 	newFilter, err = serializeToDisk(filter)
+	if err != nil {
+		t.Error("Cannot serialize filter to disk!")
+		return
+	}
 
 	if !checkFilters(filter, *newFilter, t) {
 		t.Error("Filters do not match!")
@@ -104,6 +111,10 @@ func TestSerialization(t *testing.T) {
 	filter.Add(GenerateTestValue(100))
 	newFilter.Add(GenerateTestValue(100))
 	newFilter, err = serializeToDisk(filter)
+	if err != nil {
+		t.Error("Cannot serialize filter to disk!")
+		return
+	}
 
 	if !checkFilters(filter, *newFilter, t) {
 		t.Error("Filters do not match!")
