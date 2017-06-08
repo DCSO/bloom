@@ -1,11 +1,11 @@
-// DCSO Threat Intelligence Engine
+// DCSO go bloom filter
 // Copyright (c) 2017, DCSO GmbH
 
 package bloom
 
 import (
-	gz "compress/gzip"
 	"bufio"
+	gz "compress/gzip"
 	"io"
 	"os"
 )
