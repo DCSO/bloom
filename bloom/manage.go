@@ -1,4 +1,4 @@
-// DCSO Threat Intelligence Engine
+// DCSO go bloom filter
 // Copyright (c) 2017, DCSO GmbH
 
 package main
@@ -6,10 +6,11 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/dcso/bloom"
-	"gopkg.in/urfave/cli.v1"
 	"os"
 	"path/filepath"
+
+	"github.com/DCSO/bloom"
+	"gopkg.in/urfave/cli.v1"
 )
 
 func exitWithError(message string) {
