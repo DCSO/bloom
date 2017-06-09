@@ -1,4 +1,8 @@
-# Bloom - A highly efficient bloom filter implementation for Go
+# bloom
+### A highly efficient bloom filter implementation for Go
+
+[![GoDoc](https://godoc.org/github.com/DCSO/bloom?status.svg)](http://godoc.org/github.com/DCSO/bloom)
+[![Build Status](https://travis-ci.org/DCSO/bloom.svg?branch=master)](https://travis-ci.org/DCSO/bloom)
 
 Bloom is a simple tool that provides a very efficient implementation of Bloom filters for the go language.
 It provides a command line tool that can be used to easily create Bloom filters with desired capacity
