@@ -26,6 +26,31 @@ To check if a given value or a list of values is in the filter, you can use the 
 
 This will return a list of all values in the filter.
 
+# Advanced Usage
+
+Sometimes it is useful to attach additional information to a string that we want to check against the Bloom filter,
+such as a timestamp or the original line content. To make passing along this additional information easier within
+a shell context, the Bloom tool provides an option for splitting the input string by a given delimiter and checking
+the filter against the resulting field values. Example:
+
+    # will check the Bloom filter for the values foo, bar and baz
+    cat "foo,bar,baz" | bloom -s filter.bloom
+
+    # uses a different delimiter (--magic-delimiter--)
+    cat "foo--ac5ba--bar--ac5ba--baz" | bloom  -d "--ac5ba--" -s filter.bloom
+
+    # will check the Bloom filter against the second field value only
+    cat "foo,bar,baz" | bloom -f 1 -s filter.bloom
+
+    # will check the Bloom filter against the second and third field values only
+    cat "foo,bar,baz" | bloom -f 1,2 -s filter.bloom
+
+    # will print one line for each field value that matched against the filter
+    cat "foo,bar,baz" | bloom -e -s filter.bloom
+
+This functionality is especially handy when using CSV data, as it allows you to filter CSV rows by checking individual
+columns against the filter without having to use external tools to split and reassemble the lines
+
 # Installation & Usage
 
 To install the command line tool:
