@@ -5,23 +5,23 @@ package main
 
 import (
 	"bufio"
-	"strings"
 	"fmt"
-	"strconv"
 	"github.com/DCSO/bloom"
 	"gopkg.in/urfave/cli.v1"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 type BloomParams struct {
-	gzip bool
-	interactive bool
-	split bool
+	gzip           bool
+	interactive    bool
+	split          bool
 	printEachMatch bool
-	delimiter string
-	fields []int
-	printFields []int
+	delimiter      string
+	fields         []int
+	printFields    []int
 }
 
 func exitWithError(message string) {
@@ -79,12 +79,12 @@ func insertIntoFilter(path string, bloomParams BloomParams) {
 }
 
 func contains(s []int, e int) bool {
-    for _, a := range s {
-        if a == e {
-            return true
-        }
-    }
-    return false
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
 
 func checkAgainstFilter(path string, bloomParams BloomParams) {
@@ -113,7 +113,7 @@ func checkAgainstFilter(path string, bloomParams BloomParams) {
 		if bloomParams.interactive {
 			prefix = ">"
 		}
-		for i, value := range(valuesToCheck) {
+		for i, value := range valuesToCheck {
 			j := i - len(valuesToCheck)
 			//we only check fields that are in the "fields" parameters (if defined)
 			if len(bloomParams.fields) > 0 {
@@ -129,10 +129,10 @@ func checkAgainstFilter(path string, bloomParams BloomParams) {
 					if !printed {
 						if len(bloomParams.printFields) > 0 {
 							values := make([]string, 0, len(bloomParams.printFields))
-							for _, i := range(bloomParams.printFields) {
+							for _, i := range bloomParams.printFields {
 								j := i
 								if j < 0 {
-									j = j +len(valuesToCheck)
+									j = j + len(valuesToCheck)
 								}
 								if j >= len(valuesToCheck) || j < 0 {
 									continue
@@ -148,7 +148,7 @@ func checkAgainstFilter(path string, bloomParams BloomParams) {
 				}
 			}
 		}
-		}
+	}
 }
 
 func createFilter(path string, n uint32, p float64, bloomParams BloomParams) {
@@ -188,7 +188,7 @@ func parseBloomParams(c *cli.Context) BloomParams {
 		}
 	}
 	if c.GlobalString("print-fields") != "" {
-		bloomParams.printFields, err = parseFieldIndexes(c.GlobalString("print-fields"), )
+		bloomParams.printFields, err = parseFieldIndexes(c.GlobalString("print-fields"))
 		if err != nil {
 			exitWithError(err.Error())
 		}
