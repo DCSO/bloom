@@ -1,4 +1,4 @@
-// DCSO Threat Intelligence Engine
+// DCSO go bloom filter
 // Copyright (c) 2017, DCSO GmbH
 
 package bloom

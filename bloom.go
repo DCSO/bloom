@@ -1,4 +1,4 @@
-// DCSO Threat Intelligence Engine
+// DCSO go bloom filter
 // Copyright (c) 2017, DCSO GmbH
 
 //Implements a simple and highly efficient variant of the Bloom filter that uses only two hash functions.
