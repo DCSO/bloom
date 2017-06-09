@@ -48,8 +48,11 @@ the filter against the resulting field values. Example:
     # will print one line for each field value that matched against the filter
     cat "foo,bar,baz" | bloom -e -s filter.bloom
 
+    # will print the last field value for each line whose fields matched against the filter
+    cat "foo,bar,baz" | bloom -e -s --pf -1 filter.bloom
+
 This functionality is especially handy when using CSV data, as it allows you to filter CSV rows by checking individual
-columns against the filter without having to use external tools to split and reassemble the lines
+columns against the filter without having to use external tools to split and reassemble the lines.
 
 # Installation & Usage
 

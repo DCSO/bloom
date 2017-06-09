@@ -21,26 +21,12 @@ type BloomParams struct {
 	printEachMatch bool
 	delimiter string
 	fields []int
+	printFields []int
 }
 
 func exitWithError(message string) {
 	fmt.Fprintf(os.Stderr, "Error: %s \n", message)
 	os.Exit(-1)
-}
-
-func splitLine(line string, delimiter string, fields []int) []string {
-	result := strings.Split(line, delimiter)
-	if len(fields) > 0 {
-		relevantResult := make([]string, len(fields))
-		for _, i := range fields {
-			if i >= len(result) {
-				continue
-			}
-			relevantResult = append(relevantResult, result[i])
-		}
-		return relevantResult
-	}
-	return result
 }
 
 func readValuesIntoFilter(filter *bloom.BloomFilter, bloomParams BloomParams) {
@@ -61,8 +47,16 @@ func readValuesIntoFilter(filter *bloom.BloomFilter, bloomParams BloomParams) {
 			break
 		}
 		if bloomParams.split {
-			values := splitLine(line, bloomParams.delimiter, bloomParams.fields)
-			for _, value := range values {
+			values := strings.Split(line, bloomParams.delimiter)
+			for i, value := range values {
+				j := i - len(values)
+
+				if len(bloomParams.fields) > 0 {
+					if !contains(bloomParams.fields, i) && !contains(bloomParams.fields, j) {
+						continue
+					}
+				}
+
 				filter.Add([]byte(value))
 			}
 		} else {
@@ -84,6 +78,15 @@ func insertIntoFilter(path string, bloomParams BloomParams) {
 	}
 }
 
+func contains(s []int, e int) bool {
+    for _, a := range s {
+        if a == e {
+            return true
+        }
+    }
+    return false
+}
+
 func checkAgainstFilter(path string, bloomParams BloomParams) {
 	filter, err := bloom.LoadFilter(path, bloomParams.gzip)
 	if err != nil {
@@ -100,7 +103,7 @@ func checkAgainstFilter(path string, bloomParams BloomParams) {
 		}
 		var valuesToCheck []string
 		if bloomParams.split {
-			valuesToCheck = splitLine(line, bloomParams.delimiter, bloomParams.fields)
+			valuesToCheck = strings.Split(line, bloomParams.delimiter)
 		} else {
 			valuesToCheck = make([]string, 1)
 			valuesToCheck[0] = line
@@ -110,13 +113,36 @@ func checkAgainstFilter(path string, bloomParams BloomParams) {
 		if bloomParams.interactive {
 			prefix = ">"
 		}
-		for _, value := range(valuesToCheck) {
+		for i, value := range(valuesToCheck) {
+			j := i - len(valuesToCheck)
+			//we only check fields that are in the "fields" parameters (if defined)
+			if len(bloomParams.fields) > 0 {
+				if !contains(bloomParams.fields, i) && !contains(bloomParams.fields, j) {
+					continue
+				}
+			}
+
 			if filter.Check([]byte(value)) {
 				if bloomParams.printEachMatch {
 					fmt.Printf("%s%s\n", prefix, value)
 				} else {
 					if !printed {
-						fmt.Printf("%s%s\n", prefix, line)
+						if len(bloomParams.printFields) > 0 {
+							values := make([]string, 0, len(bloomParams.printFields))
+							for _, i := range(bloomParams.printFields) {
+								j := i
+								if j < 0 {
+									j = j +len(valuesToCheck)
+								}
+								if j >= len(valuesToCheck) || j < 0 {
+									continue
+								}
+								values = append(values, valuesToCheck[j])
+							}
+							fmt.Printf("%s%s\n", prefix, strings.Join(values, bloomParams.delimiter))
+						} else {
+							fmt.Printf("%s%s\n", prefix, line)
+						}
 					}
 					printed = true
 				}
@@ -134,24 +160,42 @@ func createFilter(path string, n uint32, p float64, bloomParams BloomParams) {
 	}
 }
 
+func parseFieldIndexes(s string) ([]int, error) {
+	fields := strings.Split(s, ",")
+	fieldNumbers := make([]int, len(fields))
+	for i, field := range fields {
+		num, err := strconv.Atoi(field)
+		if err != nil {
+			return nil, err
+		}
+		fieldNumbers[i] = num
+	}
+	return fieldNumbers, nil
+}
+
 func parseBloomParams(c *cli.Context) BloomParams {
 	var bloomParams BloomParams
+	var err error
 	bloomParams.gzip = c.GlobalBool("gzip")
 	bloomParams.interactive = c.GlobalBool("interactive")
 	bloomParams.split = c.GlobalBool("split")
 	bloomParams.delimiter = c.GlobalString("delimiter")
 	bloomParams.printEachMatch = c.GlobalBool("each")
 	if c.GlobalString("fields") != "" {
-		fields := strings.Split(c.GlobalString("fields"), bloomParams.delimiter)
-		fieldNumbers := make([]int, len(fields))
-		for i, field := range fields {
-			num, err := strconv.Atoi(field)
-			if err != nil {
-				exitWithError(fmt.Sprintf("Invalid field value (should be a number): %s", field))
-			}
-			fieldNumbers[i] = num
+		bloomParams.fields, err = parseFieldIndexes(c.GlobalString("fields"))
+		if err != nil {
+			exitWithError(err.Error())
 		}
-		bloomParams.fields = fieldNumbers
+	}
+	if c.GlobalString("print-fields") != "" {
+		bloomParams.printFields, err = parseFieldIndexes(c.GlobalString("print-fields"), )
+		if err != nil {
+			exitWithError(err.Error())
+		}
+		//if printFields is set we also set printEachMatch
+		if len(bloomParams.printFields) > 0 {
+			bloomParams.printEachMatch = false
+		}
 	}
 	return bloomParams
 }
@@ -187,6 +231,11 @@ func main() {
 			Name:  "fields, f",
 			Value: "",
 			Usage: "fields of splitted output to use in filter (a single number or a comma-separated list of numbers, zero-indexed)",
+		},
+		cli.StringFlag{
+			Name:  "print-fields, pf",
+			Value: "",
+			Usage: "fields of splitted output to print for a successful match (a single number or a comma-separated list of numbers, zero-indexed).",
 		},
 	}
 	app.Commands = []cli.Command{
