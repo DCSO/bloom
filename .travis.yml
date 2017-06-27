@@ -2,3 +2,14 @@ language: go
 sudo: false
 before_script:
 - go vet ./...
+script: make release
+deploy:
+  provider: releases
+  api_key:
+    secure: t/3lERsIUmsJsSXG53yL4SAPlskwzFuVunOPILMZ6gVhiGbvW+G99a9ihGxXpyf32BSX3Jo+Jt9/JHTxJ6Kkx7rmdMzaSIIF2JRiuJ7+KzkhsB7Ngzij3iNPIZp6xLm066TiOQEYy+R0A0+fi4R522cQoIoA3+DRRHuElUs8xYCfgqoluYQ+4M5VTyzrybUzKCUpNFEpY4ESl83sdsviOW0QmApZQH1gQCoKbHdJInY9/h75419sKaT4WfplZ8X5NW0klxv1qY0WtmOrlaOzqlqWWjeHNiqJDsu2K/baReqTJUs32SkOG7BpYpA1DiFtXRz+KFkcfAOTxocRx7IMZspGdl4SWayFND+luM9+hmMJwDgE1y1iMrRCkTCy06MRc3e4Ws0KlKzeLUiMkhCxC+RPRkZxJrWmvho6w4FqyymjrE9sKG23gKoKqvecCcVjscwn7GrTCerulir43Rct3tZj8fLFSdOyOPA6ZA3aicCj+KR6r3wJtxVRk5amY9PDs7vQTxCfQbVhldCTHNhbdf5jJb6S6KcAD/5mThYghzpHPXT83pmgoFzlPIu5wMBiHjItM7dUqvPhL8HF9XM1qX+CylztdwRQJ5h49L1bX8JRLyhue019udf4F0qx58RL70FdcQ/tS4xSkleL2mdCVoD0bW/q+PuMiqaaxWhVgD0=
+  file:
+  - bloom_linux_amd64.bin
+  - bloom_windows_amd64.exe
+  on:
+    repo: DCSO/bloom
+    tags: true
