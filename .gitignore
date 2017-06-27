@@ -1,3 +1,5 @@
 *.bloom.gz
 *.bloom
 build/*
+*.bin
+*.exe
