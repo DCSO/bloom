@@ -36,6 +36,47 @@ func TestFromReaderFile(t *testing.T) {
   checkResults(t, bf)
 }
 
+func testFromSerialized(t *testing.T, gzip bool) {
+  bf := Initialize(100, 0.0001)
+  for _, v := range []string{"foo", "bar", "baz"} {
+    bf.Add([]byte(v))
+  }
+  tmpfile, err := ioutil.TempFile("", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+  err = WriteFilter(&bf, tmpfile.Name(), gzip)
+  if err != nil {
+		t.Fatal(err)
+	}
+
+  loaded_bf, err := LoadFilter(tmpfile.Name(), gzip)
+  if err != nil {
+		t.Fatal(err)
+	}
+  checkResults(t, loaded_bf)
+}
+
+func TestFromSerialized(t *testing.T) {
+  testFromSerialized(t, false)
+}
+
+func TestFromSerializedZip(t *testing.T) {
+  testFromSerialized(t, true)
+}
+
+func TestFromReaderFileZip(t *testing.T) {
+  f, err := os.Open("testdata/test.bloom.gz")
+  if err != nil {
+		t.Fatal(err)
+	}
+  defer f.Close()
+  bf, err := LoadFromReader(f, true)
+  checkResults(t, bf)
+}
+
 func TestFromReaderHttp(t *testing.T) {
   httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
