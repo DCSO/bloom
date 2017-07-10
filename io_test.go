@@ -4,95 +4,104 @@
 package bloom
 
 import (
-  "os"
-  "io/ioutil"
-  "net/http"
-  "testing"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"testing"
 
-  httpmock "gopkg.in/jarcoal/httpmock.v1"
+	httpmock "gopkg.in/jarcoal/httpmock.v1"
 )
 
 func checkResults(t *testing.T, bf *BloomFilter) {
-  for _, v := range []string{"foo", "bar", "baz"} {
-    if !bf.Check([]byte(v)) {
-      t.Fatal("value %s expected in filter but wasn't found", v)
-    }
-  }
-  if bf.Check([]byte("")) {
-    t.Fatal("empty value not expected in filter but was found")
-  }
-  if bf.Check([]byte("12345")) {
-    t.Fatal("missing value not expected in filter but was found")
-  }
+	for _, v := range []string{"foo", "bar", "baz"} {
+		if !bf.Check([]byte(v)) {
+			t.Fatalf("value %s expected in filter but wasn't found", v)
+		}
+	}
+	if bf.Check([]byte("")) {
+		t.Fatal("empty value not expected in filter but was found")
+	}
+	if bf.Check([]byte("12345")) {
+		t.Fatal("missing value not expected in filter but was found")
+	}
 }
 
 func TestFromReaderFile(t *testing.T) {
-  f, err := os.Open("testdata/test.bloom")
-  if err != nil {
+	f, err := os.Open("testdata/test.bloom")
+	if err != nil {
 		t.Fatal(err)
 	}
-  defer f.Close()
-  bf, err := LoadFromReader(f, false)
-  checkResults(t, bf)
+	defer f.Close()
+	bf, err := LoadFromReader(f, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkResults(t, bf)
 }
 
 func testFromSerialized(t *testing.T, gzip bool) {
-  bf := Initialize(100, 0.0001)
-  for _, v := range []string{"foo", "bar", "baz"} {
-    bf.Add([]byte(v))
-  }
-  tmpfile, err := ioutil.TempFile("", "test")
+	bf := Initialize(100, 0.0001)
+	for _, v := range []string{"foo", "bar", "baz"} {
+		bf.Add([]byte(v))
+	}
+	tmpfile, err := ioutil.TempFile("", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(tmpfile.Name())
 
-  err = WriteFilter(&bf, tmpfile.Name(), gzip)
-  if err != nil {
+	err = WriteFilter(&bf, tmpfile.Name(), gzip)
+	if err != nil {
 		t.Fatal(err)
 	}
 
-  loaded_bf, err := LoadFilter(tmpfile.Name(), gzip)
-  if err != nil {
+	loaded_bf, err := LoadFilter(tmpfile.Name(), gzip)
+	if err != nil {
 		t.Fatal(err)
 	}
-  checkResults(t, loaded_bf)
+	checkResults(t, loaded_bf)
 }
 
 func TestFromSerialized(t *testing.T) {
-  testFromSerialized(t, false)
+	testFromSerialized(t, false)
 }
 
 func TestFromSerializedZip(t *testing.T) {
-  testFromSerialized(t, true)
+	testFromSerialized(t, true)
 }
 
 func TestFromReaderFileZip(t *testing.T) {
-  f, err := os.Open("testdata/test.bloom.gz")
-  if err != nil {
+	f, err := os.Open("testdata/test.bloom.gz")
+	if err != nil {
 		t.Fatal(err)
 	}
-  defer f.Close()
-  bf, err := LoadFromReader(f, true)
-  checkResults(t, bf)
+	defer f.Close()
+	bf, err := LoadFromReader(f, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkResults(t, bf)
 }
 
 func TestFromReaderHttp(t *testing.T) {
-  httpmock.Activate()
+	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	testBloomFile, err := ioutil.ReadFile("testdata/test.bloom")
 	if err != nil {
 		t.Fatal(err)
 	}
 	httpmock.RegisterResponder("GET", "https://localhost:9998/test.bloom",
-	httpmock.NewBytesResponder(200, testBloomFile))
-  response, err := http.Get("https://localhost:9998/test.bloom");
-  if err != nil {
+		httpmock.NewBytesResponder(200, testBloomFile))
+	response, err := http.Get("https://localhost:9998/test.bloom")
+	if err != nil {
 		t.Fatal(err)
 	}
-  defer response.Body.Close()
-  bf, err := LoadFromReader(response.Body, false)
-  checkResults(t, bf)
+	defer response.Body.Close()
+	bf, err := LoadFromReader(response.Body, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkResults(t, bf)
 }
 
 func TestFromBytes(t *testing.T) {
@@ -100,14 +109,17 @@ func TestFromBytes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-  bf, err := LoadFromBytes(testBytes, false)
-  checkResults(t, bf)
+	bf, err := LoadFromBytes(testBytes, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkResults(t, bf)
 }
 
 func TestFromFile(t *testing.T) {
-  bf, err := LoadFilter("testdata/test.bloom", false)
-  if err != nil {
+	bf, err := LoadFilter("testdata/test.bloom", false)
+	if err != nil {
 		t.Fatal(err)
 	}
-  checkResults(t, bf)
+	checkResults(t, bf)
 }
