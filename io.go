@@ -5,10 +5,15 @@ package bloom
 
 import (
 	"bufio"
+	"bytes"
 	gz "compress/gzip"
 	"io"
 	"os"
 )
+
+func LoadFromBytes(input []byte, gzip bool) (*BloomFilter, error) {
+	return LoadFromReader(bytes.NewReader(input), gzip)
+}
 
 func LoadFilter(path string, gzip bool) (*BloomFilter, error) {
 	file, err := os.Open(path)
@@ -17,19 +22,24 @@ func LoadFilter(path string, gzip bool) (*BloomFilter, error) {
 	}
 	defer file.Close()
 
+	return LoadFromReader(file, gzip)
+}
+
+func LoadFromReader(inReader io.Reader, gzip bool) (*BloomFilter, error) {
+	var err error
 	var reader io.Reader
 	var gzipReader *gz.Reader
 	var ioReader *bufio.Reader
 
 	if gzip {
-		gzipReader, err = gz.NewReader(file)
+		gzipReader, err = gz.NewReader(inReader)
 		if err != nil {
 			return nil, err
 		}
 		defer gzipReader.Close()
 		reader = gzipReader
 	} else {
-		ioReader = bufio.NewReader(file)
+		ioReader = bufio.NewReader(inReader)
 		reader = ioReader
 	}
 
