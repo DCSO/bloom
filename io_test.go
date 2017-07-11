@@ -55,11 +55,11 @@ func testFromSerialized(t *testing.T, gzip bool) {
 		t.Fatal(err)
 	}
 
-	loaded_bf, err := LoadFilter(tmpfile.Name(), gzip)
+	loadedBf, err := LoadFilter(tmpfile.Name(), gzip)
 	if err != nil {
 		t.Fatal(err)
 	}
-	checkResults(t, loaded_bf)
+	checkResults(t, loadedBf)
 }
 
 func TestFromSerialized(t *testing.T) {
