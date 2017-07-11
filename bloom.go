@@ -90,6 +90,22 @@ func (s *BloomFilter) Read(input io.Reader) error {
 
 }
 
+func (s *BloomFilter) NumHashFuncs() uint32 {
+	return s.k
+}
+
+func (s *BloomFilter) MaxNumElements() uint32 {
+	return s.n
+}
+
+func (s *BloomFilter) NumBits() uint32 {
+	return s.m
+}
+
+func (s *BloomFilter) FalsePositiveProb() float64 {
+	return s.p
+}
+
 //Writes a filter to a writer object
 func (s *BloomFilter) Write(output io.Writer) error {
 	bs4 := make([]byte, 4)

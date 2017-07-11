@@ -6,12 +6,13 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/DCSO/bloom"
-	"gopkg.in/urfave/cli.v1"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/DCSO/bloom"
+	"gopkg.in/urfave/cli.v1"
 )
 
 type BloomParams struct {
@@ -149,6 +150,19 @@ func checkAgainstFilter(path string, bloomParams BloomParams) {
 			}
 		}
 	}
+}
+
+func printStats(path string, bloomParams BloomParams) {
+	filter, err := bloom.LoadFilter(path, bloomParams.gzip)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+	fmt.Printf("File:\t\t\t%s\n", path)
+	fmt.Printf("Capacity:\t\t%d\n", filter.MaxNumElements())
+	fmt.Printf("Elements present:\t%d\n", filter.N)
+	fmt.Printf("FP probability:\t\t%f\n", filter.FalsePositiveProb())
+	fmt.Printf("Bits:\t\t\t%d\n", filter.NumBits())
+	fmt.Printf("Hash functions:\t\t%d\n", filter.NumHashFuncs())
 }
 
 func createFilter(path string, n uint32, p float64, bloomParams BloomParams) {
@@ -304,6 +318,25 @@ func main() {
 					return err
 				}
 				checkAgainstFilter(path, bloomParams)
+				return nil
+			},
+		},
+		{
+			Name:    "show",
+			Aliases: []string{"s"},
+			Flags:   []cli.Flag{},
+			Usage:   "Shows various details about a given Bloom filter.",
+			Action: func(c *cli.Context) error {
+				path := c.Args().First()
+				bloomParams := parseBloomParams(c)
+				if path == "" {
+					exitWithError("No filename given.")
+				}
+				path, err := filepath.Abs(path)
+				if err != nil {
+					return err
+				}
+				printStats(path, bloomParams)
 				return nil
 			},
 		},
