@@ -150,6 +150,7 @@ func (s *BloomFilter) Reset() {
 	for i := uint32(0); i < s.M; i++ {
 		s.v[i] = 0
 	}
+	s.N = 0
 }
 
 // Fingerprint returns the fingerprint of a given value, as an array of index
