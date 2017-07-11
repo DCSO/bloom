@@ -14,10 +14,14 @@ import "io"
 
 const magicSeed = "this-is-magical"
 
+// SetError represents an error with a given message related to set operations.
 type SetError struct {
 	msg string
 }
 
+// BloomFilter represents a Bloom filter, a data structure for quickly checking
+// for set membership, with a specific desired capacity and false positive
+// probability.
 type BloomFilter struct {
 	//bit array
 	v []uint64
@@ -36,7 +40,7 @@ type BloomFilter struct {
 	M uint32
 }
 
-//Loads a filter from a reader object
+// Read loads a filter from a reader object.
 func (s *BloomFilter) Read(input io.Reader) error {
 	bs4 := make([]byte, 4)
 	bs8 := make([]byte, 8)
@@ -90,23 +94,29 @@ func (s *BloomFilter) Read(input io.Reader) error {
 
 }
 
+// NumHashFuncs returns the number of hash functions used in the Bloom filter.
 func (s *BloomFilter) NumHashFuncs() uint32 {
 	return s.k
 }
 
+// MaxNumElements returns the maximal supported number of elements in the Bloom
+// filter (capacity).
 func (s *BloomFilter) MaxNumElements() uint32 {
 	return s.n
 }
 
+// NumBits returns the number of bits used in the Bloom filter.
 func (s *BloomFilter) NumBits() uint32 {
 	return s.m
 }
 
+// FalsePositiveProb returns the chosen false positive probability for the
+// Bloom filter.
 func (s *BloomFilter) FalsePositiveProb() float64 {
 	return s.p
 }
 
-//Writes a filter to a writer object
+// Write writes the binary representation of a Bloom filter to an io.Writer.
 func (s *BloomFilter) Write(output io.Writer) error {
 	bs4 := make([]byte, 4)
 	bs8 := make([]byte, 8)
@@ -135,13 +145,15 @@ func (s *BloomFilter) Write(output io.Writer) error {
 	return nil
 }
 
+// Reset clears the Bloom filter of all elements.
 func (s *BloomFilter) Reset() {
 	for i := uint32(0); i < s.M; i++ {
 		s.v[i] = 0
 	}
 }
 
-//Returns the fingerprint of a given value, as an array of index values
+// Fingerprint returns the fingerprint of a given value, as an array of index
+// values.
 func (s *BloomFilter) Fingerprint(value []byte, fingerprint []uint32) {
 
 	hashValue1 := fnv.New64()
@@ -159,6 +171,7 @@ func (s *BloomFilter) Fingerprint(value []byte, fingerprint []uint32) {
 	}
 }
 
+// Add adds a byte array element to the Bloom filter.
 func (s *BloomFilter) Add(value []byte) {
 	var k, l uint32
 	newValue := false
@@ -178,12 +191,16 @@ func (s *BloomFilter) Add(value []byte) {
 	}
 }
 
+// Check returns true if the given value may be in the Bloom filter, false if it
+// is definitely not in it.
 func (s *BloomFilter) Check(value []byte) bool {
 	fingerprint := make([]uint32, s.k)
 	s.Fingerprint(value, fingerprint)
 	return s.CheckFingerprint(fingerprint)
 }
 
+// CheckFingerprint returns true if the given fingerprint occurs in the Bloom
+// filter, false if it does not.
 func (s *BloomFilter) CheckFingerprint(fingerprint []uint32) bool {
 	var k, l uint32
 	for i := uint32(0); i < s.k; i++ {
@@ -196,6 +213,8 @@ func (s *BloomFilter) CheckFingerprint(fingerprint []uint32) bool {
 	return true
 }
 
+// Initialize returns a new, empty Bloom filter with the given capacity (n)
+// and FP probability (p).
 func Initialize(n uint32, p float64) BloomFilter {
 	var bf BloomFilter
 	bf.n = n

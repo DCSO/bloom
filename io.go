@@ -11,10 +11,16 @@ import (
 	"os"
 )
 
+// LoadFromBytes reads a binary Bloom filter representation from a byte array
+// and returns a BloomFilter struct pointer based on it.
+// If 'gzip' is true, then compressed input will be expected.
 func LoadFromBytes(input []byte, gzip bool) (*BloomFilter, error) {
 	return LoadFromReader(bytes.NewReader(input), gzip)
 }
 
+// LoadFilter reads a binary Bloom filter representation from a file
+// and returns a BloomFilter struct pointer based on it.
+// If 'gzip' is true, then compressed input will be expected.
 func LoadFilter(path string, gzip bool) (*BloomFilter, error) {
 	file, err := os.Open(path)
 	if err != nil {
@@ -25,6 +31,9 @@ func LoadFilter(path string, gzip bool) (*BloomFilter, error) {
 	return LoadFromReader(file, gzip)
 }
 
+// LoadFromReader reads a binary Bloom filter representation from an io.Reader
+// and returns a BloomFilter struct pointer based on it.
+// If 'gzip' is true, then compressed input will be expected.
 func LoadFromReader(inReader io.Reader, gzip bool) (*BloomFilter, error) {
 	var err error
 	var reader io.Reader
@@ -51,6 +60,8 @@ func LoadFromReader(inReader io.Reader, gzip bool) (*BloomFilter, error) {
 	return &filter, nil
 }
 
+// WriteFilter writes a binary Bloom filter representation for a given struct
+// to a file. If 'gzip' is true, then a compressed file will be written.
 func WriteFilter(filter *BloomFilter, path string, gzip bool) error {
 
 	file, err := os.Create(path)

@@ -15,6 +15,7 @@ import (
 	"gopkg.in/urfave/cli.v1"
 )
 
+// BloomParams represents the parameters of the 'bloom' command line tool.
 type BloomParams struct {
 	gzip           bool
 	interactive    bool
