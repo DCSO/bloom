@@ -3,12 +3,17 @@
 
 package bloom
 
-import "os"
-import "math"
-import "bytes"
-import "io/ioutil"
-import "testing"
-import "math/rand"
+import (
+	"bytes"
+	"io/ioutil"
+	"log"
+	"math"
+	"math/rand"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
 
 func TestInitialization(t *testing.T) {
 	filter := Initialize(10000, 0.001)
@@ -138,6 +143,53 @@ func TestSerializationToDisk(t *testing.T) {
 	newFilter.Read(&buf)
 
 	checkFilters(filter, newFilter, t)
+}
+
+func TestSerializationWriteFail(t *testing.T) {
+	capacity := uint32(100000)
+	p := float64(0.001)
+	samples := uint32(1000)
+	filter, _ := GenerateExampleFilter(capacity, p, samples)
+
+	dir, err := ioutil.TempDir("", "bloomtest")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	tmpfn := filepath.Join(dir, "tmpfile")
+	tmpfile, err := os.OpenFile(tmpfn, os.O_CREATE|os.O_RDONLY, 0000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tmpfile.Close()
+
+	err = filter.Write(tmpfile)
+	if err == nil {
+		t.Error("writing to read-only file should fail")
+	}
+}
+
+func TestSerializationReadFail(t *testing.T) {
+	var newFilter BloomFilter
+
+	dir, err := ioutil.TempDir("", "bloomtest")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	tmpfn := filepath.Join(dir, "tmpfile")
+	tmpfile, err := os.OpenFile(tmpfn, os.O_CREATE, 0777)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tmpfile.Close()
+
+	err = newFilter.Read(tmpfile)
+	if err == nil {
+		t.Error("reading from empty file should fail")
+	}
 }
 
 func GenerateTestValue(length uint32) []byte {
