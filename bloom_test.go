@@ -294,7 +294,7 @@ func TestJoiningRegularMisdimensioned(t *testing.T) {
 		t.Error("joining filters with different capacity should fail")
 	}
 	if !strings.Contains(err.Error(), "different dimensions") {
-		t.Error("wring error message returned")
+		t.Error("wrong error message returned")
 	}
 	a = Initialize(100000, 0.0001)
 	b = Initialize(100000, 0.001)
@@ -303,7 +303,7 @@ func TestJoiningRegularMisdimensioned(t *testing.T) {
 		t.Error("joining filters with different FP prob should fail")
 	}
 	if !strings.Contains(err.Error(), "different dimensions") {
-		t.Error("wring error message returned")
+		t.Error("wrong error message returned")
 	}
 	a = Initialize(100000, 0.0001)
 	b = Initialize(100000, 0.0001)
@@ -313,7 +313,7 @@ func TestJoiningRegularMisdimensioned(t *testing.T) {
 		t.Error("joining filters with different number of hash funcs should fail")
 	}
 	if !strings.Contains(err.Error(), "different dimensions") {
-		t.Error("wring error message returned")
+		t.Error("wrong error message returned")
 	}
 	a = Initialize(100000, 0.0001)
 	b = Initialize(100000, 0.0001)
@@ -323,7 +323,7 @@ func TestJoiningRegularMisdimensioned(t *testing.T) {
 		t.Error("joining filters with different number of bits should fail")
 	}
 	if !strings.Contains(err.Error(), "different dimensions") {
-		t.Error("wring error message returned")
+		t.Error("wrong error message returned")
 	}
 	a = Initialize(100000, 0.0001)
 	b = Initialize(100000, 0.0001)
@@ -333,7 +333,7 @@ func TestJoiningRegularMisdimensioned(t *testing.T) {
 		t.Error("joining filters with different int array size should fail")
 	}
 	if !strings.Contains(err.Error(), "different dimensions") {
-		t.Error("wring error message returned")
+		t.Error("wrong error message returned")
 	}
 }
 
