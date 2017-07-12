@@ -175,6 +175,25 @@ func createFilter(path string, n uint32, p float64, bloomParams BloomParams) {
 	}
 }
 
+func joinFilters(path string, pathToAdd string, bloomParams BloomParams) {
+	filter, err := bloom.LoadFilter(path, bloomParams.gzip)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+	filter2, err := bloom.LoadFilter(pathToAdd, bloomParams.gzip)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+	err = filter.Join(filter2)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+	err = bloom.WriteFilter(filter, path, bloomParams.gzip)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+}
+
 func parseFieldIndexes(s string) ([]int, error) {
 	fields := strings.Split(s, ",")
 	fieldNumbers := make([]int, len(fields))
@@ -300,6 +319,36 @@ func main() {
 					return err
 				}
 				insertIntoFilter(path, bloomParams)
+				return nil
+			},
+		},
+		{
+			Name:    "join",
+			Aliases: []string{"j", "merge", "m"},
+			Flags:   []cli.Flag{},
+			Usage:   "Joins two Bloom filters into one.",
+			Action: func(c *cli.Context) error {
+				if len(c.Args()) != 2 {
+					exitWithError("Two filenames are required.")
+				}
+				bloomParams := parseBloomParams(c)
+				path := c.Args().First()
+				if path == "" {
+					exitWithError("No first filename given.")
+				}
+				path, err := filepath.Abs(path)
+				if err != nil {
+					return err
+				}
+				pathToAdd := c.Args().Get(1)
+				if pathToAdd == "" {
+					exitWithError("No second filename given.")
+				}
+				pathToAdd, err = filepath.Abs(pathToAdd)
+				if err != nil {
+					return err
+				}
+				joinFilters(path, pathToAdd, bloomParams)
 				return nil
 			},
 		},
