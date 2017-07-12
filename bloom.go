@@ -10,6 +10,7 @@ import "hash/fnv"
 import "errors"
 import "math"
 import "fmt"
+
 import "io"
 
 const magicSeed = "this-is-magical"
@@ -227,7 +228,11 @@ func (s *BloomFilter) Join(s2 *BloomFilter) error {
 	for i = 0; i < s.M; i++ {
 		s.v[i] |= s2.v[i]
 	}
-	s.N += s2.N
+	if s.N+s2.N < s.N {
+		return fmt.Errorf("addition of member counts would overflow")
+	} else {
+		s.N += s2.N
+	}
 	return nil
 }
 
