@@ -192,6 +192,45 @@ func (s *BloomFilter) Add(value []byte) {
 	}
 }
 
+// Join adds the items of another Bloom filter with identical dimensions to
+// the receiver. That is, all elements that are described in the
+// second filter will also described by the receiver, and the number of elements
+// of the receiver will grow by the number of elements in the added filter.
+// Note that it is implicitly assumed that both filters are disjoint! Otherwise
+// the number of elements in the joined filter must _only_ be considered an
+// upper bound and not an exact value!
+// Joining two differently dimensioned filters may yield unexpected results and
+// hence is not allowed. An error will be returned in this case, and the
+// receiver will be left unaltered.
+func (s *BloomFilter) Join(s2 *BloomFilter) error {
+	var i uint32
+	if s.n != s2.n {
+		return fmt.Errorf("filters have different dimensions (n = %d vs. %d))",
+			s.n, s2.n)
+	}
+	if s.p != s2.p {
+		return fmt.Errorf("filters have different dimensions (p = %f vs. %f))",
+			s.p, s2.p)
+	}
+	if s.k != s2.k {
+		return fmt.Errorf("filters have different dimensions (k = %d vs. %d))",
+			s.k, s2.k)
+	}
+	if s.m != s2.m {
+		return fmt.Errorf("filters have different dimensions (m = %d vs. %d))",
+			s.m, s2.m)
+	}
+	if s.M != s2.M {
+		return fmt.Errorf("filters have different dimensions (M = %d vs. %d))",
+			s.M, s2.M)
+	}
+	for i = 0; i < s.M; i++ {
+		s.v[i] |= s2.v[i]
+	}
+	s.N += s2.N
+	return nil
+}
+
 // Check returns true if the given value may be in the Bloom filter, false if it
 // is definitely not in it.
 func (s *BloomFilter) Check(value []byte) bool {
