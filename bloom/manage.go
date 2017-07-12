@@ -391,7 +391,7 @@ func main() {
 			},
 		},
 	}
+	app.Version = "0.1.1"
 
 	app.Run(os.Args)
-
 }
