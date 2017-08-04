@@ -6,14 +6,16 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/DCSO/bloom"
-	"gopkg.in/urfave/cli.v1"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/DCSO/bloom"
+	"gopkg.in/urfave/cli.v1"
 )
 
+// BloomParams represents the parameters of the 'bloom' command line tool.
 type BloomParams struct {
 	gzip           bool
 	interactive    bool
@@ -151,10 +153,42 @@ func checkAgainstFilter(path string, bloomParams BloomParams) {
 	}
 }
 
+func printStats(path string, bloomParams BloomParams) {
+	filter, err := bloom.LoadFilter(path, bloomParams.gzip)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+	fmt.Printf("File:\t\t\t%s\n", path)
+	fmt.Printf("Capacity:\t\t%d\n", filter.MaxNumElements())
+	fmt.Printf("Elements present:\t%d\n", filter.N)
+	fmt.Printf("FP probability:\t\t%f\n", filter.FalsePositiveProb())
+	fmt.Printf("Bits:\t\t\t%d\n", filter.NumBits())
+	fmt.Printf("Hash functions:\t\t%d\n", filter.NumHashFuncs())
+}
+
 func createFilter(path string, n uint32, p float64, bloomParams BloomParams) {
 	filter := bloom.Initialize(n, p)
 	readValuesIntoFilter(&filter, bloomParams)
 	err := bloom.WriteFilter(&filter, path, bloomParams.gzip)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+}
+
+func joinFilters(path string, pathToAdd string, bloomParams BloomParams) {
+	filter, err := bloom.LoadFilter(path, bloomParams.gzip)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+	filter2, err := bloom.LoadFilter(pathToAdd, bloomParams.gzip)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+	err = filter.Join(filter2)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+	err = bloom.WriteFilter(filter, path, bloomParams.gzip)
 	if err != nil {
 		exitWithError(err.Error())
 	}
@@ -289,6 +323,36 @@ func main() {
 			},
 		},
 		{
+			Name:    "join",
+			Aliases: []string{"j", "merge", "m"},
+			Flags:   []cli.Flag{},
+			Usage:   "Joins two Bloom filters into one.",
+			Action: func(c *cli.Context) error {
+				if len(c.Args()) != 2 {
+					exitWithError("Two filenames are required.")
+				}
+				bloomParams := parseBloomParams(c)
+				path := c.Args().First()
+				if path == "" {
+					exitWithError("No first filename given.")
+				}
+				path, err := filepath.Abs(path)
+				if err != nil {
+					return err
+				}
+				pathToAdd := c.Args().Get(1)
+				if pathToAdd == "" {
+					exitWithError("No second filename given.")
+				}
+				pathToAdd, err = filepath.Abs(pathToAdd)
+				if err != nil {
+					return err
+				}
+				joinFilters(path, pathToAdd, bloomParams)
+				return nil
+			},
+		},
+		{
 			Name:    "check",
 			Aliases: []string{"c"},
 			Flags:   []cli.Flag{},
@@ -307,8 +371,27 @@ func main() {
 				return nil
 			},
 		},
+		{
+			Name:    "show",
+			Aliases: []string{"s"},
+			Flags:   []cli.Flag{},
+			Usage:   "Shows various details about a given Bloom filter.",
+			Action: func(c *cli.Context) error {
+				path := c.Args().First()
+				bloomParams := parseBloomParams(c)
+				if path == "" {
+					exitWithError("No filename given.")
+				}
+				path, err := filepath.Abs(path)
+				if err != nil {
+					return err
+				}
+				printStats(path, bloomParams)
+				return nil
+			},
+		},
 	}
+	app.Version = "0.1.1"
 
 	app.Run(os.Args)
-
 }

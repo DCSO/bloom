@@ -3,12 +3,17 @@
 
 package bloom
 
-import "os"
-import "math"
-import "bytes"
-import "io/ioutil"
-import "testing"
-import "math/rand"
+import (
+	"bytes"
+	"io/ioutil"
+	"log"
+	"math"
+	"math/rand"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
 
 func TestInitialization(t *testing.T) {
 	filter := Initialize(10000, 0.001)
@@ -140,6 +145,53 @@ func TestSerializationToDisk(t *testing.T) {
 	checkFilters(filter, newFilter, t)
 }
 
+func TestSerializationWriteFail(t *testing.T) {
+	capacity := uint32(100000)
+	p := float64(0.001)
+	samples := uint32(1000)
+	filter, _ := GenerateExampleFilter(capacity, p, samples)
+
+	dir, err := ioutil.TempDir("", "bloomtest")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	tmpfn := filepath.Join(dir, "tmpfile")
+	tmpfile, err := os.OpenFile(tmpfn, os.O_CREATE|os.O_RDONLY, 0000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tmpfile.Close()
+
+	err = filter.Write(tmpfile)
+	if err == nil {
+		t.Error("writing to read-only file should fail")
+	}
+}
+
+func TestSerializationReadFail(t *testing.T) {
+	var newFilter BloomFilter
+
+	dir, err := ioutil.TempDir("", "bloomtest")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	tmpfn := filepath.Join(dir, "tmpfile")
+	tmpfile, err := os.OpenFile(tmpfn, os.O_CREATE, 0777)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tmpfile.Close()
+
+	err = newFilter.Read(tmpfile)
+	if err == nil {
+		t.Error("reading from empty file should fail")
+	}
+}
+
 func GenerateTestValue(length uint32) []byte {
 	value := make([]byte, length)
 	for i := uint32(0); i < length; i++ {
@@ -155,6 +207,20 @@ func GenerateExampleFilter(capacity uint32, p float64, samples uint32) (BloomFil
 		testValue := GenerateTestValue(100)
 		testValues = append(testValues, testValue)
 		filter.Add(testValue)
+	}
+	return filter, testValues
+}
+
+func GenerateDisjointExampleFilter(capacity uint32, p float64, samples uint32, other BloomFilter) (BloomFilter, [][]byte) {
+	filter := Initialize(capacity, p)
+	testValues := make([][]byte, 0, samples)
+	for i := uint32(0); i < samples; {
+		testValue := GenerateTestValue(100)
+		if !other.Check(testValue) {
+			testValues = append(testValues, testValue)
+			filter.Add(testValue)
+			i++
+		}
 	}
 	return filter, testValues
 }
@@ -217,6 +283,106 @@ func TestFalsePositives(t *testing.T) {
 	//we allow for a probability that is two times higher than the normally acceptable probability
 	if matches/cnt > pAcceptable*2 {
 		t.Error("False positive probability is too high at ", matches/cnt*100, "% vs ", pAcceptable*100, "%")
+	}
+}
+
+func TestJoiningRegularMisdimensioned(t *testing.T) {
+	a := Initialize(100000, 0.0001)
+	b := Initialize(10000, 0.0001)
+	err := a.Join(&b)
+	if err == nil {
+		t.Error("joining filters with different capacity should fail")
+	}
+	if !strings.Contains(err.Error(), "different dimensions") {
+		t.Error("wrong error message returned")
+	}
+	a = Initialize(100000, 0.0001)
+	b = Initialize(100000, 0.001)
+	err = a.Join(&b)
+	if err == nil {
+		t.Error("joining filters with different FP prob should fail")
+	}
+	if !strings.Contains(err.Error(), "different dimensions") {
+		t.Error("wrong error message returned")
+	}
+	a = Initialize(100000, 0.0001)
+	b = Initialize(100000, 0.0001)
+	b.k = 1
+	err = a.Join(&b)
+	if err == nil {
+		t.Error("joining filters with different number of hash funcs should fail")
+	}
+	if !strings.Contains(err.Error(), "different dimensions") {
+		t.Error("wrong error message returned")
+	}
+	a = Initialize(100000, 0.0001)
+	b = Initialize(100000, 0.0001)
+	b.m = 1
+	err = a.Join(&b)
+	if err == nil {
+		t.Error("joining filters with different number of bits should fail")
+	}
+	if !strings.Contains(err.Error(), "different dimensions") {
+		t.Error("wrong error message returned")
+	}
+	a = Initialize(100000, 0.0001)
+	b = Initialize(100000, 0.0001)
+	b.M = 1
+	err = a.Join(&b)
+	if err == nil {
+		t.Error("joining filters with different int array size should fail")
+	}
+	if !strings.Contains(err.Error(), "different dimensions") {
+		t.Error("wrong error message returned")
+	}
+}
+
+func TestAccessors(t *testing.T) {
+	a, _ := GenerateExampleFilter(100000, 0.0001, 10000)
+	if a.MaxNumElements() != 100000 {
+		t.Error("unexpected capacity in filter")
+	}
+	if a.NumBits() != 1917011 {
+		t.Error("unexpected number of bits in filter")
+	}
+	if a.NumHashFuncs() != 14 {
+		t.Error("unexpected number of hash funcs in filter")
+	}
+	if a.FalsePositiveProb() != 0.0001 {
+		t.Error("unexpected FP prob in filter")
+	}
+}
+
+func TestJoiningRegular(t *testing.T) {
+	a, aval := GenerateExampleFilter(100000, 0.0001, 10000)
+	b, bval := GenerateDisjointExampleFilter(100000, 0.0001, 20000, a)
+	for _, v := range bval {
+		if a.Check(v) {
+			t.Errorf("value not missing in joined filter: %s", string(v))
+		}
+	}
+	if a.N != 10000 {
+		t.Error("unexpected number of elements in filter")
+	}
+	if b.N != 20000 {
+		t.Error("unexpected number of elements in filter")
+	}
+	err := a.Join(&b)
+	if a.N != 30000 {
+		t.Errorf("unexpected number of elements in filter")
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, v := range aval {
+		if !a.Check(v) {
+			t.Errorf("value not found in joined filter: %s", string(v))
+		}
+	}
+	for _, v := range bval {
+		if !a.Check(v) {
+			t.Errorf("value not found in joined filter: %s", string(v))
+		}
 	}
 }
 

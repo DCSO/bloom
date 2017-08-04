@@ -10,14 +10,19 @@ import "hash/fnv"
 import "errors"
 import "math"
 import "fmt"
+
 import "io"
 
 const magicSeed = "this-is-magical"
 
+// SetError represents an error with a given message related to set operations.
 type SetError struct {
 	msg string
 }
 
+// BloomFilter represents a Bloom filter, a data structure for quickly checking
+// for set membership, with a specific desired capacity and false positive
+// probability.
 type BloomFilter struct {
 	//bit array
 	v []uint64
@@ -36,7 +41,7 @@ type BloomFilter struct {
 	M uint32
 }
 
-//Loads a filter from a reader object
+// Read loads a filter from a reader object.
 func (s *BloomFilter) Read(input io.Reader) error {
 	bs4 := make([]byte, 4)
 	bs8 := make([]byte, 8)
@@ -90,7 +95,29 @@ func (s *BloomFilter) Read(input io.Reader) error {
 
 }
 
-//Writes a filter to a writer object
+// NumHashFuncs returns the number of hash functions used in the Bloom filter.
+func (s *BloomFilter) NumHashFuncs() uint32 {
+	return s.k
+}
+
+// MaxNumElements returns the maximal supported number of elements in the Bloom
+// filter (capacity).
+func (s *BloomFilter) MaxNumElements() uint32 {
+	return s.n
+}
+
+// NumBits returns the number of bits used in the Bloom filter.
+func (s *BloomFilter) NumBits() uint32 {
+	return s.m
+}
+
+// FalsePositiveProb returns the chosen false positive probability for the
+// Bloom filter.
+func (s *BloomFilter) FalsePositiveProb() float64 {
+	return s.p
+}
+
+// Write writes the binary representation of a Bloom filter to an io.Writer.
 func (s *BloomFilter) Write(output io.Writer) error {
 	bs4 := make([]byte, 4)
 	bs8 := make([]byte, 8)
@@ -119,13 +146,16 @@ func (s *BloomFilter) Write(output io.Writer) error {
 	return nil
 }
 
+// Reset clears the Bloom filter of all elements.
 func (s *BloomFilter) Reset() {
 	for i := uint32(0); i < s.M; i++ {
 		s.v[i] = 0
 	}
+	s.N = 0
 }
 
-//Returns the fingerprint of a given value, as an array of index values
+// Fingerprint returns the fingerprint of a given value, as an array of index
+// values.
 func (s *BloomFilter) Fingerprint(value []byte, fingerprint []uint32) {
 
 	hashValue1 := fnv.New64()
@@ -143,6 +173,7 @@ func (s *BloomFilter) Fingerprint(value []byte, fingerprint []uint32) {
 	}
 }
 
+// Add adds a byte array element to the Bloom filter.
 func (s *BloomFilter) Add(value []byte) {
 	var k, l uint32
 	newValue := false
@@ -162,12 +193,59 @@ func (s *BloomFilter) Add(value []byte) {
 	}
 }
 
+// Join adds the items of another Bloom filter with identical dimensions to
+// the receiver. That is, all elements that are described in the
+// second filter will also described by the receiver, and the number of elements
+// of the receiver will grow by the number of elements in the added filter.
+// Note that it is implicitly assumed that both filters are disjoint! Otherwise
+// the number of elements in the joined filter must _only_ be considered an
+// upper bound and not an exact value!
+// Joining two differently dimensioned filters may yield unexpected results and
+// hence is not allowed. An error will be returned in this case, and the
+// receiver will be left unaltered.
+func (s *BloomFilter) Join(s2 *BloomFilter) error {
+	var i uint32
+	if s.n != s2.n {
+		return fmt.Errorf("filters have different dimensions (n = %d vs. %d))",
+			s.n, s2.n)
+	}
+	if s.p != s2.p {
+		return fmt.Errorf("filters have different dimensions (p = %f vs. %f))",
+			s.p, s2.p)
+	}
+	if s.k != s2.k {
+		return fmt.Errorf("filters have different dimensions (k = %d vs. %d))",
+			s.k, s2.k)
+	}
+	if s.m != s2.m {
+		return fmt.Errorf("filters have different dimensions (m = %d vs. %d))",
+			s.m, s2.m)
+	}
+	if s.M != s2.M {
+		return fmt.Errorf("filters have different dimensions (M = %d vs. %d))",
+			s.M, s2.M)
+	}
+	for i = 0; i < s.M; i++ {
+		s.v[i] |= s2.v[i]
+	}
+	if s.N+s2.N < s.N {
+		return fmt.Errorf("addition of member counts would overflow")
+	} else {
+		s.N += s2.N
+	}
+	return nil
+}
+
+// Check returns true if the given value may be in the Bloom filter, false if it
+// is definitely not in it.
 func (s *BloomFilter) Check(value []byte) bool {
 	fingerprint := make([]uint32, s.k)
 	s.Fingerprint(value, fingerprint)
 	return s.CheckFingerprint(fingerprint)
 }
 
+// CheckFingerprint returns true if the given fingerprint occurs in the Bloom
+// filter, false if it does not.
 func (s *BloomFilter) CheckFingerprint(fingerprint []uint32) bool {
 	var k, l uint32
 	for i := uint32(0); i < s.k; i++ {
@@ -180,6 +258,8 @@ func (s *BloomFilter) CheckFingerprint(fingerprint []uint32) bool {
 	return true
 }
 
+// Initialize returns a new, empty Bloom filter with the given capacity (n)
+// and FP probability (p).
 func Initialize(n uint32, p float64) BloomFilter {
 	var bf BloomFilter
 	bf.n = n
