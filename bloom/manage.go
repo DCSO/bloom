@@ -4,6 +4,7 @@
 package main
 
 import (
+	"bytes"
 	"bufio"
 	"fmt"
 	"github.com/DCSO/bloom"
@@ -78,16 +79,16 @@ func readInputIntoData(filter *bloom.BloomFilter, bloomParams BloomParams) {
 		fmt.Println("Interactive mode: Enter a blank line [by pressing ENTER] to exit (values will not be stored otherwise).")
 	}
 	scanner := bufio.NewScanner(os.Stdin)
-	data := make([]byte, 0, 100)
+	dataBuffer := bytes.NewBuffer([]byte(""))
 	for scanner.Scan() {
 		line := scanner.Bytes()
 		if len(line) == 0 && bloomParams.interactive {
 			break
 		}
-		data = append(data, line[:]...)
-		data = append(data, []byte("\n")...)
+		dataBuffer.Write(line)
+		dataBuffer.Write([]byte("\n"))
 	}
-	filter.Data = data
+	filter.Data = dataBuffer.Bytes()
 }
 
 func insertIntoFilter(path string, bloomParams BloomParams) {
