@@ -38,7 +38,8 @@ func checkFilters(a BloomFilter, b BloomFilter, t *testing.T) bool {
 		b.p != a.p ||
 		b.k != a.k ||
 		b.m != a.m ||
-		b.M != a.M {
+		b.M != a.M ||
+		bytes.Compare(b.Data, a.Data) != 0 {
 		return false
 	}
 	for i := uint32(0); i < a.M; i++ {
@@ -202,6 +203,7 @@ func GenerateTestValue(length uint32) []byte {
 
 func GenerateExampleFilter(capacity uint32, p float64, samples uint32) (BloomFilter, [][]byte) {
 	filter := Initialize(capacity, p)
+	filter.Data = []byte("foobar")
 	testValues := make([][]byte, 0, samples)
 	for i := uint32(0); i < samples; i++ {
 		testValue := GenerateTestValue(100)

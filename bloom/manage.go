@@ -6,13 +6,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/DCSO/bloom"
+	"gopkg.in/urfave/cli.v1"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"github.com/DCSO/bloom"
-	"gopkg.in/urfave/cli.v1"
 )
 
 // BloomParams represents the parameters of the 'bloom' command line tool.
@@ -65,7 +64,30 @@ func readValuesIntoFilter(filter *bloom.BloomFilter, bloomParams BloomParams) {
 			filter.Add([]byte(line))
 		}
 	}
+}
 
+func readInputIntoData(filter *bloom.BloomFilter, bloomParams BloomParams) {
+	//we determine if the program is run interactively or within a pipe
+	stat, _ := os.Stdin.Stat()
+	var isTerminal = (stat.Mode() & os.ModeCharDevice) != 0
+	//if we are not in an interactive session and this is a terminal, we quit
+	if !bloomParams.interactive && isTerminal {
+		return
+	}
+	if bloomParams.interactive {
+		fmt.Println("Interactive mode: Enter a blank line [by pressing ENTER] to exit (values will not be stored otherwise).")
+	}
+	scanner := bufio.NewScanner(os.Stdin)
+	data := make([]byte, 0, 100)
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		if len(line) == 0 && bloomParams.interactive {
+			break
+		}
+		data = append(data, line[:]...)
+		data = append(data, []byte("\n")...)
+	}
+	filter.Data = data
 }
 
 func insertIntoFilter(path string, bloomParams BloomParams) {
@@ -78,6 +100,26 @@ func insertIntoFilter(path string, bloomParams BloomParams) {
 	if err != nil {
 		exitWithError(err.Error())
 	}
+}
+
+func updateFilterData(path string, bloomParams BloomParams) {
+	filter, err := bloom.LoadFilter(path, bloomParams.gzip)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+	readInputIntoData(filter, bloomParams)
+	err = bloom.WriteFilter(filter, path, bloomParams.gzip)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+}
+
+func getFilterData(path string, bloomParams BloomParams) {
+	filter, err := bloom.LoadFilter(path, bloomParams.gzip)
+	if err != nil {
+		exitWithError(err.Error())
+	}
+	fmt.Print(string(filter.Data))
 }
 
 func contains(s []int, e int) bool {
@@ -368,6 +410,44 @@ func main() {
 					return err
 				}
 				checkAgainstFilter(path, bloomParams)
+				return nil
+			},
+		},
+		{
+			Name:    "set-data",
+			Aliases: []string{"c"},
+			Flags:   []cli.Flag{},
+			Usage:   "Sets the data associated with the Bloom filter.",
+			Action: func(c *cli.Context) error {
+				path := c.Args().First()
+				bloomParams := parseBloomParams(c)
+				if path == "" {
+					exitWithError("No filename given.")
+				}
+				path, err := filepath.Abs(path)
+				if err != nil {
+					return err
+				}
+				updateFilterData(path, bloomParams)
+				return nil
+			},
+		},
+		{
+			Name:    "get-data",
+			Aliases: []string{"c"},
+			Flags:   []cli.Flag{},
+			Usage:   "Prints the data associated with the Bloom filter.",
+			Action: func(c *cli.Context) error {
+				path := c.Args().First()
+				bloomParams := parseBloomParams(c)
+				if path == "" {
+					exitWithError("No filename given.")
+				}
+				path, err := filepath.Abs(path)
+				if err != nil {
+					return err
+				}
+				getFilterData(path, bloomParams)
 				return nil
 			},
 		},

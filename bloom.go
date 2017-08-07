@@ -5,13 +5,15 @@
 
 package bloom
 
-import "encoding/binary"
-import "hash/fnv"
-import "errors"
-import "math"
-import "fmt"
-
-import "io"
+import (
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"hash/fnv"
+	"io"
+	"io/ioutil"
+	"math"
+)
 
 const magicSeed = "this-is-magical"
 
@@ -36,9 +38,10 @@ type BloomFilter struct {
 	m uint32
 	//number of elements in the filter
 	N uint32
-
 	//number of 64-bit integers (generated automatically)
 	M uint32
+	//arbitrary data that we can attach to the filter
+	Data []byte
 }
 
 // Read loads a filter from a reader object.
@@ -91,6 +94,14 @@ func (s *BloomFilter) Read(input io.Reader) error {
 		s.v[i] = binary.LittleEndian.Uint64(bs8)
 	}
 
+	b, err := ioutil.ReadAll(input)
+
+	if err != nil {
+		return err
+	}
+
+	s.Data = b
+
 	return nil
 
 }
@@ -142,6 +153,9 @@ func (s *BloomFilter) Write(output io.Writer) error {
 		if err != nil {
 			return err
 		}
+	}
+	if s.Data != nil {
+		output.Write(s.Data)
 	}
 	return nil
 }
