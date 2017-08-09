@@ -1,4 +1,5 @@
-# bloom
+# Bloom
+
 ### A highly efficient bloom filter implementation for Go
 
 [![GoDoc](https://godoc.org/github.com/DCSO/bloom?status.svg)](http://godoc.org/github.com/DCSO/bloom)
@@ -10,6 +11,39 @@ and false positive probability. Values can be added to filters through standard 
 easy to use the tool in a pipeline workflow.
 
 # Usage
+
+    NAME:
+       Bloom Filter - Utility to work with bloom filters
+
+    USAGE:
+       bloom [global options] command [command options] [arguments...]
+
+    VERSION:
+       0.1.1
+
+    COMMANDS:
+         create, c          Create a new Bloom filter and store it in the given filename.
+         insert, i          Inserts new values into an existing Bloom filter.
+         join, j, merge, m  Joins two Bloom filters into one.
+         check, c           Checks values against an existing Bloom filter.
+         set-data, c        Sets the data associated with the Bloom filter.
+         get-data, c        Prints the data associated with the Bloom filter.
+         show, s            Shows various details about a given Bloom filter.
+         help, h            Shows a list of commands or help for one command
+
+    GLOBAL OPTIONS:
+       --gzip, --gz                      compress bloom file with gzip
+       --interactive, -i                 interactively add values to the filter
+       --split, -s                       split the input string
+       --each, -e                        print each match of a splitted string individually
+       --delimiter value, -d value       delimiter to use for splitting (default: ",")
+       --fields value, -f value          fields of splitted output to use in filter (a single number or a comma-separated list of numbers, zero-indexed)
+       --print-fields value, --pf value  fields of splitted output to print for a successful match (a single number or a comma-separated list of numbers, zero-indexed).
+       --help, -h                        show help
+       --version, -v                     print the version
+
+
+# Examples
 
 To create a new bloom filter with a desired capacity and false positive probability, you can use the `create` command:
 
@@ -58,7 +92,7 @@ the filter against the resulting field values. Example:
 This functionality is especially handy when using CSV data, as it allows you to filter CSV rows by checking individual
 columns against the filter without having to use external tools to split and reassemble the lines.
 
-# Installation & Usage
+# Installation
 
 To install the command line tool:
 
