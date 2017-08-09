@@ -5,11 +5,8 @@ package bloom
 
 import (
 	"io/ioutil"
-	"net/http"
 	"os"
 	"testing"
-
-	httpmock "gopkg.in/jarcoal/httpmock.v1"
 )
 
 func checkResults(t *testing.T, bf *BloomFilter) {
@@ -77,27 +74,6 @@ func TestFromReaderFileZip(t *testing.T) {
 	}
 	defer f.Close()
 	bf, err := LoadFromReader(f, true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	checkResults(t, bf)
-}
-
-func TestFromReaderHttp(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-	testBloomFile, err := ioutil.ReadFile("testdata/test.bloom")
-	if err != nil {
-		t.Fatal(err)
-	}
-	httpmock.RegisterResponder("GET", "https://localhost:9998/test.bloom",
-		httpmock.NewBytesResponder(200, testBloomFile))
-	response, err := http.Get("https://localhost:9998/test.bloom")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer response.Body.Close()
-	bf, err := LoadFromReader(response.Body, false)
 	if err != nil {
 		t.Fatal(err)
 	}
