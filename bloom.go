@@ -197,7 +197,7 @@ func (s *BloomFilter) Add(value []byte) {
 		k = uint32(fingerprint[i] / 64)
 		l = uint32(fingerprint[i] % 64)
 		v := uint64(1 << l)
-		if s.v[k]&v == 0 {
+		if (s.v[k]&v) == 0 {
 			newValue = true
 		}
 		s.v[k] |= v
