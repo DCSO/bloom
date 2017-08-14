@@ -105,3 +105,12 @@ To run the tests:
 To run the benchmarks:
 
     make bench
+
+# Cross-Compiling
+
+To compile a binary, simply specify the target architecture and go:
+
+    #Windows, 64 bit
+    env GOOS=windows GOARCH=amd64 go build -v -o bloom.exe github.com/DCSO/bloom
+    #Windows, 32 bit
+    env GOOS=windows GOARCH=i386 go build -v -o /tmp/bloom github.com/DCSO/bloom
