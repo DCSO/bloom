@@ -416,7 +416,7 @@ func main() {
 		},
 		{
 			Name:    "set-data",
-			Aliases: []string{"c"},
+			Aliases: []string{"sd"},
 			Flags:   []cli.Flag{},
 			Usage:   "Sets the data associated with the Bloom filter.",
 			Action: func(c *cli.Context) error {
@@ -435,7 +435,7 @@ func main() {
 		},
 		{
 			Name:    "get-data",
-			Aliases: []string{"c"},
+			Aliases: []string{"gd"},
 			Flags:   []cli.Flag{},
 			Usage:   "Prints the data associated with the Bloom filter.",
 			Action: func(c *cli.Context) error {
