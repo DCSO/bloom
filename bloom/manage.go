@@ -4,8 +4,8 @@
 package main
 
 import (
-	"bytes"
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/DCSO/bloom"
 	"gopkg.in/urfave/cli.v1"
