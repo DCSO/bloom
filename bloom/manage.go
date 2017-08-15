@@ -4,8 +4,8 @@
 package main
 
 import (
-	"bytes"
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/DCSO/bloom"
 	"gopkg.in/urfave/cli.v1"
@@ -297,7 +297,7 @@ func main() {
 		},
 		cli.BoolFlag{
 			Name:  "each, e",
-			Usage: "print each match of a splitted string individually",
+			Usage: "print each match of a split string individually",
 		},
 		cli.StringFlag{
 			Name:  "delimiter, d",
@@ -307,18 +307,18 @@ func main() {
 		cli.StringFlag{
 			Name:  "fields, f",
 			Value: "",
-			Usage: "fields of splitted output to use in filter (a single number or a comma-separated list of numbers, zero-indexed)",
+			Usage: "fields of split output to use in filter (a single number or a comma-separated list of numbers, zero-indexed)",
 		},
 		cli.StringFlag{
 			Name:  "print-fields, pf",
 			Value: "",
-			Usage: "fields of splitted output to print for a successful match (a single number or a comma-separated list of numbers, zero-indexed).",
+			Usage: "fields of split output to print for a successful match (a single number or a comma-separated list of numbers, zero-indexed).",
 		},
 	}
 	app.Commands = []cli.Command{
 		{
 			Name:    "create",
-			Aliases: []string{"c"},
+			Aliases: []string{"cr"},
 			Flags: []cli.Flag{
 				cli.Float64Flag{Name: "p", Value: 0.01, Usage: "The desired false positive probability."},
 				cli.IntFlag{Name: "n", Value: 10000, Usage: "The desired capacity."},
@@ -416,7 +416,7 @@ func main() {
 		},
 		{
 			Name:    "set-data",
-			Aliases: []string{"c"},
+			Aliases: []string{"sd"},
 			Flags:   []cli.Flag{},
 			Usage:   "Sets the data associated with the Bloom filter.",
 			Action: func(c *cli.Context) error {
@@ -435,7 +435,7 @@ func main() {
 		},
 		{
 			Name:    "get-data",
-			Aliases: []string{"c"},
+			Aliases: []string{"gd"},
 			Flags:   []cli.Flag{},
 			Usage:   "Prints the data associated with the Bloom filter.",
 			Action: func(c *cli.Context) error {

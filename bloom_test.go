@@ -39,7 +39,7 @@ func checkFilters(a BloomFilter, b BloomFilter, t *testing.T) bool {
 		b.k != a.k ||
 		b.m != a.m ||
 		b.M != a.M ||
-		bytes.Compare(b.Data, a.Data) != 0 {
+		!bytes.Equal(b.Data, a.Data) {
 		return false
 	}
 	for i := uint32(0); i < a.M; i++ {

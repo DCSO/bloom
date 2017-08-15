@@ -197,7 +197,7 @@ func (s *BloomFilter) Add(value []byte) {
 		k = uint32(fingerprint[i] / 64)
 		l = uint32(fingerprint[i] % 64)
 		v := uint64(1 << l)
-		if (s.v[k]&v) == 0 {
+		if (s.v[k] & v) == 0 {
 			newValue = true
 		}
 		s.v[k] |= v
@@ -244,9 +244,9 @@ func (s *BloomFilter) Join(s2 *BloomFilter) error {
 	}
 	if s.N+s2.N < s.N {
 		return fmt.Errorf("addition of member counts would overflow")
-	} else {
-		s.N += s2.N
 	}
+	s.N += s2.N
+
 	return nil
 }
 
