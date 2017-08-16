@@ -22,12 +22,12 @@ easy to use the tool in a pipeline workflow.
        0.1.1
 
     COMMANDS:
-         create, c          Create a new Bloom filter and store it in the given filename.
+         create, cr         Create a new Bloom filter and store it in the given filename.
          insert, i          Inserts new values into an existing Bloom filter.
          join, j, merge, m  Joins two Bloom filters into one.
          check, c           Checks values against an existing Bloom filter.
-         set-data, c        Sets the data associated with the Bloom filter.
-         get-data, c        Prints the data associated with the Bloom filter.
+         set-data, sd       Sets the data associated with the Bloom filter.
+         get-data, gd       Prints the data associated with the Bloom filter.
          show, s            Shows various details about a given Bloom filter.
          help, h            Shows a list of commands or help for one command
 
@@ -35,10 +35,10 @@ easy to use the tool in a pipeline workflow.
        --gzip, --gz                      compress bloom file with gzip
        --interactive, -i                 interactively add values to the filter
        --split, -s                       split the input string
-       --each, -e                        print each match of a splitted string individually
+       --each, -e                        print each match of a split string individually
        --delimiter value, -d value       delimiter to use for splitting (default: ",")
-       --fields value, -f value          fields of splitted output to use in filter (a single number or a comma-separated list of numbers, zero-indexed)
-       --print-fields value, --pf value  fields of splitted output to print for a successful match (a single number or a comma-separated list of numbers, zero-indexed).
+       --fields value, -f value          fields of split output to use in filter (a single number or a comma-separated list of numbers, zero-indexed)
+       --print-fields value, --pf value  fields of split output to print for a successful match (a single number or a comma-separated list of numbers, zero-indexed).
        --help, -h                        show help
        --version, -v                     print the version
 
