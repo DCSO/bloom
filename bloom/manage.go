@@ -58,7 +58,6 @@ func readValuesIntoFilter(filter *bloom.BloomFilter, bloomParams BloomParams) {
 						continue
 					}
 				}
-
 				filter.Add([]byte(value))
 			}
 		} else {
@@ -204,7 +203,7 @@ func printStats(path string, bloomParams BloomParams) {
 	fmt.Printf("File:\t\t\t%s\n", path)
 	fmt.Printf("Capacity:\t\t%d\n", filter.MaxNumElements())
 	fmt.Printf("Elements present:\t%d\n", filter.N)
-	fmt.Printf("FP probability:\t\t%f\n", filter.FalsePositiveProb())
+	fmt.Printf("FP probability:\t\t%.2e\n", filter.FalsePositiveProb())
 	fmt.Printf("Bits:\t\t\t%d\n", filter.NumBits())
 	fmt.Printf("Hash functions:\t\t%d\n", filter.NumHashFuncs())
 }
