@@ -15,8 +15,6 @@ import (
 	"math"
 )
 
-const magicSeed = "this-is-magical"
-
 // SetError represents an error with a given message related to set operations.
 type SetError struct {
 	msg string
@@ -47,6 +45,16 @@ type BloomFilter struct {
 // Read loads a filter from a reader object.
 func (s *BloomFilter) Read(input io.Reader) error {
 	bs8 := make([]byte, 8)
+
+	if _, err := io.ReadFull(input, bs8); err != nil {
+		return err
+	}
+
+	flags := binary.LittleEndian.Uint64(bs8)
+
+	if flags & 0xFF != 1 {
+		return fmt.Errorf("Invalid version bit (should be 1)")
+	}
 
 	if _, err := io.ReadFull(input, bs8); err != nil {
 		return err
@@ -131,6 +139,10 @@ func (s *BloomFilter) FalsePositiveProb() float64 {
 func (s *BloomFilter) Write(output io.Writer) error {
 	bs8 := make([]byte, 8)
 
+	// we write the version bit
+	binary.LittleEndian.PutUint64(bs8, 1)
+	output.Write(bs8)
+
 	binary.LittleEndian.PutUint64(bs8, s.n)
 	output.Write(bs8)
 	binary.LittleEndian.PutUint64(bs8, math.Float64bits(s.p))
@@ -170,18 +182,15 @@ func (s *BloomFilter) Reset() {
 // values.
 func (s *BloomFilter) Fingerprint(value []byte, fingerprint []uint64) {
 
-	hashValue1 := fnv.New64()
-	hashValue2 := fnv.New64()
-
-	hashValue1.Write(value)
-	hashValue2.Write(value)
-	hashValue2.Write([]byte(magicSeed))
-
-	h1 := hashValue1.Sum64()
-	h2 := hashValue2.Sum64()
+	hv := fnv.New64()
+	hv.Write(value)
+	hn := hv.Sum64()
+	hm := hn
 
 	for i := uint64(0); i < s.k; i++ {
-		fingerprint[i] = uint64((h1 + (uint64(i)+1)*h2) % uint64(s.m))
+		hn = hn+hm*i
+		hm = hn
+		fingerprint[i] = uint64(hn % s.m)
 	}
 }
 

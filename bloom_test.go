@@ -23,10 +23,10 @@ func TestInitialization(t *testing.T) {
 	if filter.m != 143775 {
 		t.Error("m does not match expectation: ", filter.m)
 	}
-	if filter.M != uint32(math.Ceil(float64(filter.m)/64)) {
+	if filter.M != uint64(math.Ceil(float64(filter.m)/64)) {
 		t.Error("M does not match expectation: ", filter.M)
 	}
-	for i := uint32(0); i < filter.M; i++ {
+	for i := uint64(0); i < filter.M; i++ {
 		if filter.v[i] != 0 {
 			t.Error("Filter value is not initialized to zero!")
 		}
@@ -42,7 +42,7 @@ func checkFilters(a BloomFilter, b BloomFilter, t *testing.T) bool {
 		!bytes.Equal(b.Data, a.Data) {
 		return false
 	}
-	for i := uint32(0); i < a.M; i++ {
+	for i := uint64(0); i < a.M; i++ {
 		if a.v[i] != b.v[i] {
 			return false
 		}
@@ -76,9 +76,9 @@ func serializeToDisk(filter BloomFilter) (*BloomFilter, error) {
 }
 
 func TestSerialization(t *testing.T) {
-	capacity := uint32(100000)
+	capacity := uint64(100000)
 	p := float64(0.01)
-	samples := uint32(1000)
+	samples := uint64(1000)
 	filter, _ := GenerateExampleFilter(capacity, p, samples)
 
 	newFilter, err := serializeToBuffer(filter)
@@ -130,9 +130,9 @@ func TestSerialization(t *testing.T) {
 }
 
 func TestSerializationToDisk(t *testing.T) {
-	capacity := uint32(100000)
+	capacity := uint64(100000)
 	p := float64(0.001)
-	samples := uint32(1000)
+	samples := uint64(1000)
 	filter, _ := GenerateExampleFilter(capacity, p, samples)
 
 	var buf bytes.Buffer
@@ -147,9 +147,9 @@ func TestSerializationToDisk(t *testing.T) {
 }
 
 func TestSerializationWriteFail(t *testing.T) {
-	capacity := uint32(100000)
+	capacity := uint64(100000)
 	p := float64(0.001)
-	samples := uint32(1000)
+	samples := uint64(1000)
 	filter, _ := GenerateExampleFilter(capacity, p, samples)
 
 	dir, err := ioutil.TempDir("", "bloomtest")
@@ -193,19 +193,19 @@ func TestSerializationReadFail(t *testing.T) {
 	}
 }
 
-func GenerateTestValue(length uint32) []byte {
+func GenerateTestValue(length uint64) []byte {
 	value := make([]byte, length)
-	for i := uint32(0); i < length; i++ {
+	for i := uint64(0); i < length; i++ {
 		value[i] = byte(rand.Int() % 256)
 	}
 	return value
 }
 
-func GenerateExampleFilter(capacity uint32, p float64, samples uint32) (BloomFilter, [][]byte) {
+func GenerateExampleFilter(capacity uint64, p float64, samples uint64) (BloomFilter, [][]byte) {
 	filter := Initialize(capacity, p)
 	filter.Data = []byte("foobar")
 	testValues := make([][]byte, 0, samples)
-	for i := uint32(0); i < samples; i++ {
+	for i := uint64(0); i < samples; i++ {
 		testValue := GenerateTestValue(100)
 		testValues = append(testValues, testValue)
 		filter.Add(testValue)
@@ -213,10 +213,10 @@ func GenerateExampleFilter(capacity uint32, p float64, samples uint32) (BloomFil
 	return filter, testValues
 }
 
-func GenerateDisjointExampleFilter(capacity uint32, p float64, samples uint32, other BloomFilter) (BloomFilter, [][]byte) {
+func GenerateDisjointExampleFilter(capacity uint64, p float64, samples uint64, other BloomFilter) (BloomFilter, [][]byte) {
 	filter := Initialize(capacity, p)
 	testValues := make([][]byte, 0, samples)
-	for i := uint32(0); i < samples; {
+	for i := uint64(0); i < samples; {
 		testValue := GenerateTestValue(100)
 		if !other.Check(testValue) {
 			testValues = append(testValues, testValue)
@@ -229,11 +229,11 @@ func GenerateDisjointExampleFilter(capacity uint32, p float64, samples uint32, o
 
 //This tests the checking of values against a given filter
 func TestChecking(t *testing.T) {
-	capacity := uint32(100000)
+	capacity := uint64(100000)
 	p := float64(0.001)
-	samples := uint32(100000)
+	samples := uint64(100000)
 	filter, testValues := GenerateExampleFilter(capacity, p, samples)
-	fingerprint := make([]uint32, filter.k)
+	fingerprint := make([]uint64, filter.k)
 	for _, value := range testValues {
 		filter.Fingerprint(value, fingerprint)
 		if !filter.CheckFingerprint(fingerprint) {
@@ -244,12 +244,12 @@ func TestChecking(t *testing.T) {
 
 //This tests the checking of values against a given filter after resetting it
 func TestReset(t *testing.T) {
-	capacity := uint32(100000)
+	capacity := uint64(100000)
 	p := float64(0.001)
-	samples := uint32(100000)
+	samples := uint64(100000)
 	filter, testValues := GenerateExampleFilter(capacity, p, samples)
 	filter.Reset()
-	fingerprint := make([]uint32, filter.k)
+	fingerprint := make([]uint64, filter.k)
 	for _, value := range testValues {
 		filter.Fingerprint(value, fingerprint)
 		if filter.CheckFingerprint(fingerprint) {
@@ -261,13 +261,13 @@ func TestReset(t *testing.T) {
 //This tests the checking of values against a given filter
 //see https://en.wikipedia.org/wiki/Bloom_filter#Probability_of_false_positives
 func TestFalsePositives(t *testing.T) {
-	capacity := uint32(10000)
+	capacity := uint64(10000)
 	p := float64(0.001)
 	fillingFactor := 0.9
-	N := uint32(float64(capacity) * fillingFactor)
+	N := uint64(float64(capacity) * fillingFactor)
 	filter, _ := GenerateExampleFilter(capacity, p, N)
 	pAcceptable := math.Pow(1-math.Exp(-float64(filter.k)*float64(N)/float64(filter.m)), float64(filter.k))
-	fingerprint := make([]uint32, filter.k)
+	fingerprint := make([]uint64, filter.k)
 	cnt := 0.0
 	matches := 0.0
 	for {
@@ -390,11 +390,11 @@ func TestJoiningRegular(t *testing.T) {
 
 //This benchmarks the checking of values against a given filter
 func BenchmarkChecking(b *testing.B) {
-	capacity := uint32(1e9)
+	capacity := uint64(1e9)
 	p := float64(0.001)
-	samples := uint32(100000)
+	samples := uint64(100000)
 	filter, testValues := GenerateExampleFilter(capacity, p, samples)
-	fingerprint := make([]uint32, filter.k)
+	fingerprint := make([]uint64, filter.k)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		value := testValues[rand.Int()%len(testValues)]
@@ -407,9 +407,9 @@ func BenchmarkChecking(b *testing.B) {
 
 //This benchmarks the checking without using a fixed fingerprint variable (instead a temporary variable is created each time)
 func BenchmarkSimpleChecking(b *testing.B) {
-	capacity := uint32(1e9)
+	capacity := uint64(1e9)
 	p := float64(0.001)
-	samples := uint32(100000)
+	samples := uint64(100000)
 	filter, testValues := GenerateExampleFilter(capacity, p, samples)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
