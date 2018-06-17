@@ -208,7 +208,7 @@ func printStats(path string, bloomParams BloomParams) {
 	fmt.Printf("Hash functions:\t\t%d\n", filter.NumHashFuncs())
 }
 
-func createFilter(path string, n uint32, p float64, bloomParams BloomParams) {
+func createFilter(path string, n uint64, p float64, bloomParams BloomParams) {
 	filter := bloom.Initialize(n, p)
 	readValuesIntoFilter(&filter, bloomParams)
 	err := bloom.WriteFilter(&filter, path, bloomParams.gzip)
@@ -320,7 +320,7 @@ func main() {
 			Aliases: []string{"cr"},
 			Flags: []cli.Flag{
 				cli.Float64Flag{Name: "p", Value: 0.01, Usage: "The desired false positive probability."},
-				cli.IntFlag{Name: "n", Value: 10000, Usage: "The desired capacity."},
+				cli.Uint64Flag{Name: "n", Value: 10000, Usage: "The desired capacity."},
 			},
 			Usage: "Create a new Bloom filter and store it in the given filename.",
 			Action: func(c *cli.Context) error {
@@ -333,7 +333,7 @@ func main() {
 				if err != nil {
 					return err
 				}
-				n := c.Int("n")
+				n := c.Uint64("n")
 				p := c.Float64("p")
 				if n < 0 {
 					exitWithError("n cannot be negative.")
@@ -341,7 +341,7 @@ func main() {
 				if p < 0 || p > 1 {
 					exitWithError("p must be between 0 and 1.")
 				}
-				createFilter(path, uint32(n), p, bloomParams)
+				createFilter(path, n, p, bloomParams)
 				return nil
 			},
 		},
