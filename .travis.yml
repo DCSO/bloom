@@ -1,6 +1,7 @@
 language: go
 sudo: false
 before_script:
+- go get ./...
 - go vet ./...
 script: make release
 deploy:
