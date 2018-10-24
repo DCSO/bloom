@@ -15,11 +15,6 @@ import (
 	"math"
 )
 
-// SetError represents an error with a given message related to set operations.
-type SetError struct {
-	msg string
-}
-
 // BloomFilter represents a Bloom filter, a data structure for quickly checking
 // for set membership, with a specific desired capacity and false positive
 // probability.
@@ -52,7 +47,7 @@ func (s *BloomFilter) Read(input io.Reader) error {
 
 	flags := binary.LittleEndian.Uint64(bs8)
 
-	if flags & 0xFF != 1 {
+	if flags&0xFF != 1 {
 		return fmt.Errorf("Invalid version bit (should be 1)")
 	}
 
@@ -185,6 +180,7 @@ func (s *BloomFilter) Reset() {
 // with g and taking the modulo over m to generate a sequence of hash values
 // that has a uniform distribution.
 const m uint64 = 18446744073709551557
+
 // this is our multiplier. It has a very large primitive root
 // so that it will not repeat a given cycle for any practically meaningful
 // value of k.
@@ -199,7 +195,7 @@ func (s *BloomFilter) Fingerprint(value []byte, fingerprint []uint64) {
 	hn := hv.Sum64() % m
 
 	for i := uint64(0); i < s.k; i++ {
-		hn = (hn*g) % m
+		hn = (hn * g) % m
 		fingerprint[i] = uint64(hn % s.m)
 	}
 }
