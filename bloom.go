@@ -15,8 +15,6 @@ import (
 	"math"
 )
 
-const magicSeed = "this-is-magical"
-
 // BloomFilter represents a Bloom filter, a data structure for quickly checking
 // for set membership, with a specific desired capacity and false positive
 // probability.
