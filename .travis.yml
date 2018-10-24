@@ -11,6 +11,7 @@ deploy:
   file:
   - bloom_linux_amd64.bin
   - bloom_windows_amd64.exe
+  skip_cleanup: true
   on:
     repo: DCSO/bloom
     tags: true
