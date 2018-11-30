@@ -15,6 +15,19 @@ import (
 	"testing"
 )
 
+func TestFingerprinting(t *testing.T) {
+	filter := Initialize(100000, 0.01)
+	fp := make([]uint64, 7)
+	expected := [7]uint64{20311, 36825, 412501, 835777, 658914, 853361, 307361}
+	filter.Fingerprint([]byte("bar"), fp)
+	for i, v := range fp {
+		if v != expected[i] {
+			t.Errorf("Wrong fingerprint: %d vs. %d", v, expected[i])
+			break
+		}
+	}
+}
+
 func TestInitialization(t *testing.T) {
 	filter := Initialize(10000, 0.001)
 	if filter.k != 10 {
