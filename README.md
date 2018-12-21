@@ -94,6 +94,10 @@ columns against the filter without having to use external tools to split and rea
 
 # Installation
 
+Debian command line tool (https://packages.debian.org/source/sid/golang-github-dcso-bloom):
+
+    apt install golang-github-dcso-bloom-cli
+
 To install the command line tool:
 
     make install
