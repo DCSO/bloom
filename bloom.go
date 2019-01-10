@@ -68,6 +68,10 @@ func (s *BloomFilter) Read(input io.Reader) error {
 	}
 
 	s.k = binary.LittleEndian.Uint64(bs8)
+	maxInt := uint64(int(^uint(0) >> 1))
+	if s.k >= maxInt {
+		return fmt.Errorf("value of k (number of hash functions) is too high (%d), must be less than maximum int (%d)", s.k, maxInt)
+	}
 
 	if _, err := io.ReadFull(input, bs8); err != nil {
 		return err
@@ -189,7 +193,6 @@ const g uint64 = 18446744073709550147
 // Fingerprint returns the fingerprint of a given value, as an array of index
 // values.
 func (s *BloomFilter) Fingerprint(value []byte, fingerprint []uint64) {
-
 	hv := fnv.New64()
 	hv.Write(value)
 	hn := hv.Sum64() % m

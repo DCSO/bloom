@@ -6,6 +6,7 @@ package bloom
 import (
 	"io/ioutil"
 	"os"
+	"regexp"
 	"testing"
 )
 
@@ -34,6 +35,22 @@ func TestFromReaderFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	checkResults(t, bf)
+}
+
+func TestFromReaderCorruptFile(t *testing.T) {
+	f, err := os.Open("testdata/broken.bloom")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	_, err = LoadFromReader(f, false)
+	if err == nil {
+		t.Fatal("error expected")
+	}
+	r, _ := regexp.Compile("is too high")
+	if !r.MatchString(err.Error()) {
+		t.Fatalf("wrong error message: %s", err.Error())
+	}
 }
 
 func testFromSerialized(t *testing.T, gzip bool) {
