@@ -1,9 +1,9 @@
 language: go
 sudo: false
 before_script:
-- go get ./...
+- go get -t ./...
 - go vet ./...
-script: make release
+script: make release test
 deploy:
   provider: releases
   api_key:
