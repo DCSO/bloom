@@ -21,18 +21,25 @@ import (
 type BloomFilter struct {
 	//bit array
 	v []uint64
+
 	//desired maximum number of elements
 	n uint64
+
 	//desired false positive probability
 	p float64
+
 	//number of hash functions
 	k uint64
+
 	//number of bits
 	m uint64
+
 	//number of elements in the filter
 	N uint64
+
 	//number of 64-bit integers (generated automatically)
 	M uint64
+
 	//arbitrary data that we can attach to the filter
 	Data []byte
 }
@@ -291,12 +298,13 @@ func (s *BloomFilter) CheckFingerprint(fingerprint []uint64) bool {
 // Initialize returns a new, empty Bloom filter with the given capacity (n)
 // and FP probability (p).
 func Initialize(n uint64, p float64) BloomFilter {
+	m := math.Abs(math.Ceil(float64(n) * math.Log(p) / math.Pow(math.Log(2.0), 2.0)))
 	var bf BloomFilter
 	bf.n = n
 	bf.p = p
-	bf.m = uint64(math.Abs(math.Ceil(float64(n) * math.Log(float64(p)) / (math.Pow(math.Log(2.0), 2.0)))))
-	bf.M = uint64(math.Ceil(float64(bf.m) / 64.0))
-	bf.k = uint64(math.Ceil(math.Log(2) * float64(bf.m) / float64(n)))
+	bf.m = uint64(m)
+	bf.M = uint64(math.Ceil(m / 64.0))
+	bf.k = uint64(math.Ceil(math.Log(2) * m / float64(n)))
 	bf.v = make([]uint64, bf.M)
 	return bf
 }
