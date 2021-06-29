@@ -106,7 +106,7 @@ Debian [command line tool](https://tracker.debian.org/pkg/golang-github-dcso-blo
 
 ## Installation from source
 
-These need to be run from within the GOPATH source directory for this project (e.g. `$GOPATH/src/github.com/DCSO/bloom`). To install the command line tool:
+These need to be run from within the `GOPATH` source directory for this project (e.g. `$GOPATH/src/github.com/DCSO/bloom`). To install the command line tool:
 
     make install
 
