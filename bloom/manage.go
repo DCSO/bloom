@@ -7,12 +7,13 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/DCSO/bloom"
-	"gopkg.in/urfave/cli.v1"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/DCSO/bloom"
+	"gopkg.in/urfave/cli.v1"
 )
 
 // BloomParams represents the parameters of the 'bloom' command line tool.
@@ -471,7 +472,7 @@ func main() {
 			},
 		},
 	}
-	app.Version = "0.2.2"
+	app.Version = "0.2.4"
 
 	app.Run(os.Args)
 }
