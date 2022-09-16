@@ -240,7 +240,7 @@ func GenerateDisjointExampleFilter(capacity uint64, p float64, samples uint64, o
 	return filter, testValues
 }
 
-//This tests the checking of values against a given filter
+// This tests the checking of values against a given filter
 func TestChecking(t *testing.T) {
 	capacity := uint64(100000)
 	p := float64(0.001)
@@ -255,7 +255,7 @@ func TestChecking(t *testing.T) {
 	}
 }
 
-//This tests the checking of values against a given filter after resetting it
+// This tests the checking of values against a given filter after resetting it
 func TestReset(t *testing.T) {
 	capacity := uint64(100000)
 	p := float64(0.001)
@@ -271,8 +271,8 @@ func TestReset(t *testing.T) {
 	}
 }
 
-//This tests the checking of values against a given filter
-//see https://en.wikipedia.org/wiki/Bloom_filter#Probability_of_false_positives
+// This tests the checking of values against a given filter
+// see https://en.wikipedia.org/wiki/Bloom_filter#Probability_of_false_positives
 func TestFalsePositives(t *testing.T) {
 	capacity := uint64(10000)
 	p := float64(0.001)
@@ -371,6 +371,7 @@ func TestAccessors(t *testing.T) {
 func TestJoiningRegular(t *testing.T) {
 	a, aval := GenerateExampleFilter(100000, 0.0001, 10000)
 	b, bval := GenerateDisjointExampleFilter(100000, 0.0001, 20000, a)
+	c, _ := GenerateDisjointExampleFilter(100000, 0.0001, 85000, b)
 	for _, v := range bval {
 		if a.Check(v) {
 			t.Errorf("value not missing in joined filter: %s", string(v))
@@ -399,9 +400,18 @@ func TestJoiningRegular(t *testing.T) {
 			t.Errorf("value not found in joined filter: %s", string(v))
 		}
 	}
+	expected := "addition of member counts would overflow"
+	actual := b.Join(&c)
+	if actual == nil {
+		t.Errorf("Expected error %v not triggered", expected)
+	} else {
+		if actual.Error() != expected {
+			t.Errorf("Error actual = %v, and Expected = %v.", actual, expected)
+		}
+	}
 }
 
-//This benchmarks the checking of values against a given filter
+// This benchmarks the checking of values against a given filter
 func BenchmarkChecking(b *testing.B) {
 	capacity := uint64(1e9)
 	p := float64(0.001)
@@ -418,7 +428,7 @@ func BenchmarkChecking(b *testing.B) {
 	}
 }
 
-//This benchmarks the checking without using a fixed fingerprint variable (instead a temporary variable is created each time)
+// This benchmarks the checking without using a fixed fingerprint variable (instead a temporary variable is created each time)
 func BenchmarkSimpleChecking(b *testing.B) {
 	capacity := uint64(1e9)
 	p := float64(0.001)

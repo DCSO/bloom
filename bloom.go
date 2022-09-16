@@ -262,14 +262,13 @@ func (s *BloomFilter) Join(s2 *BloomFilter) error {
 		return fmt.Errorf("filters have different dimensions (M = %d vs. %d))",
 			s.M, s2.M)
 	}
+	if (s.N + s2.N) > s.n {
+		return fmt.Errorf("addition of member counts would overflow")
+	}
 	for i = 0; i < s.M; i++ {
 		s.v[i] |= s2.v[i]
 	}
-	if s.N+s2.N < s.N {
-		return fmt.Errorf("addition of member counts would overflow")
-	}
 	s.N += s2.N
-
 	return nil
 }
 
